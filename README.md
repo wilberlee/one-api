@@ -211,6 +211,33 @@ docker-compose ps
 
 更加详细的部署教程[参见此处](https://iamazing.cn/page/how-to-deploy-a-website)。
 
+### 外网镜像部署（镜像+MySQL）
+1. mysql中先建立数据库openai6
+2. 执行下面的shell命令
+```shell
+docker run --name one-api-v10 \
+-d --restart always -p 30082:3000 \
+-e SQL_DSN="root:mysql123@tcp(82.156.211.74:33060)/openai6" \
+-e TZ=Asia/Shanghai \
+-e TIKTOKEN_CACHE_DIR=/data/cache \
+-v /data/lbl/images/one-api:/data \
+-v /data/lbl/images/data-gym-cache:/data/cache \
+one-api:v0.1.5
+```
+### N网部署（镜像+postgres）
+```shell
+docker run -d \
+--name one-api-v8 \
+--restart always \
+-p 30052:3000 \
+-e SQL_DSN="postgres://postgres:Postgres@2024@172.40.233.150:15432/openai" \
+-e TZ=Asia/Shanghai \
+-e TIKTOKEN_CACHE_DIR=/data/cache \
+-v /home/lixy/lbl/workspace/images/data-gym-cache:/data/cache \
+-v /home/lixy/lbl/workspace/one-api:/data \
+qianfan/one-api:v0.1.3
+```
+
 ### 多机部署
 1. 所有服务器 `SESSION_SECRET` 设置一样的值。
 2. 必须设置 `SQL_DSN`，使用 MySQL 数据库而非 SQLite，所有服务器连接同一个数据库。
