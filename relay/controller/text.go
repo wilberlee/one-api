@@ -4,19 +4,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/songquanpeng/one-api/common/config"
+	"github.com/songquanpeng/one-api/relay/apitype"
+	"github.com/songquanpeng/one-api/relay/channeltype"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/songquanpeng/one-api/common/logger"
 	"github.com/songquanpeng/one-api/relay"
 	"github.com/songquanpeng/one-api/relay/adaptor"
 	"github.com/songquanpeng/one-api/relay/adaptor/openai"
-	"github.com/songquanpeng/one-api/relay/apitype"
 	"github.com/songquanpeng/one-api/relay/billing"
 	billingratio "github.com/songquanpeng/one-api/relay/billing/ratio"
-	"github.com/songquanpeng/one-api/relay/channeltype"
 	"github.com/songquanpeng/one-api/relay/meta"
 	"github.com/songquanpeng/one-api/relay/model"
 )
@@ -36,8 +36,6 @@ func RelayTextHelper(c *gin.Context) *model.ErrorWithStatusCode {
 	meta.OriginModelName = textRequest.Model
 	textRequest.Model, _ = getMappedModelName(textRequest.Model, meta.ModelMapping)
 	meta.ActualModelName = textRequest.Model
-	// set system prompt if not empty
-	systemPromptReset := setSystemPrompt(ctx, textRequest, meta.SystemPrompt)
 	// get model ratio & group ratio
 	modelRatio := billingratio.GetModelRatio(textRequest.Model, meta.ChannelType)
 	groupRatio := billingratio.GetGroupRatio(meta.Group)
@@ -50,8 +48,16 @@ func RelayTextHelper(c *gin.Context) *model.ErrorWithStatusCode {
 		logger.Warnf(ctx, "preConsumeQuota failed: %+v", *bizErr)
 		return bizErr
 	}
-
 	adaptor := relay.GetAdaptor(meta.APIType)
+	if strings.Contains(meta.BaseURL, "/ai_custom/v1/wenxinworkshop/") {
+		adaptor = relay.GetAdaptor(3) // 3是baidu的apitype号
+	}
+	if strings.Contains(meta.BaseURL, "/compatible-mode/v1/") {
+		adaptor = relay.GetAdaptor(5) // 5是ali的apitype号
+	}
+	fmt.Println("*********** RelayTextHelper meta: ", meta)
+	fmt.Println("*********** RelayTextHelper meta.APIType: ", meta.APIType)
+	fmt.Println("RelayTextHelper adaptor: ", adaptor)
 	if adaptor == nil {
 		return openai.ErrorWrapper(fmt.Errorf("invalid api type: %d", meta.APIType), "invalid_api_type", http.StatusBadRequest)
 	}
@@ -59,6 +65,8 @@ func RelayTextHelper(c *gin.Context) *model.ErrorWithStatusCode {
 
 	// get request body
 	requestBody, err := getRequestBody(c, meta, textRequest, adaptor)
+	fmt.Println("*********** RelayTextHelper requestBody: ", requestBody)
+	fmt.Println("#########################")
 	if err != nil {
 		return openai.ErrorWrapper(err, "convert_request_failed", http.StatusInternalServerError)
 	}
@@ -82,19 +90,26 @@ func RelayTextHelper(c *gin.Context) *model.ErrorWithStatusCode {
 		return respErr
 	}
 	// post-consume quota
-	go postConsumeQuota(ctx, usage, meta, textRequest, ratio, preConsumedQuota, modelRatio, groupRatio, systemPromptReset)
+	go postConsumeQuota(ctx, usage, meta, textRequest, ratio, preConsumedQuota, modelRatio, groupRatio)
 	return nil
 }
 
 func getRequestBody(c *gin.Context, meta *meta.Meta, textRequest *model.GeneralOpenAIRequest, adaptor adaptor.Adaptor) (io.Reader, error) {
-	if !config.EnforceIncludeUsage && meta.APIType == apitype.OpenAI && meta.OriginModelName == meta.ActualModelName && meta.ChannelType != channeltype.Baichuan {
+	if meta.APIType == apitype.OpenAI && meta.OriginModelName == meta.ActualModelName && meta.ChannelType != channeltype.Baichuan && !strings.Contains(meta.BaseURL, "/ai_custom/v1/wenxinworkshop/") && !strings.Contains(meta.BaseURL, "/compatible-mode/v1/") {
 		// no need to convert request for openai
 		return c.Request.Body, nil
 	}
 
 	// get request body
 	var requestBody io.Reader
+	fmt.Println("-------------------")
+	fmt.Println("****getRequestBody c:", c.Param("id"))
+	fmt.Println("****getRequestBody meta.BaseURL:", meta.BaseURL)
+	fmt.Println("****getRequestBody textRequest:", textRequest)
+	fmt.Println("-------------------")
 	convertedRequest, err := adaptor.ConvertRequest(c, meta.Mode, textRequest)
+	fmt.Println("convertedRequest:", convertedRequest)
+	fmt.Println("-------------------")
 	if err != nil {
 		logger.Debugf(c.Request.Context(), "converted request failed: %s\n", err.Error())
 		return nil, err

@@ -5,19 +5,23 @@ COPY ./VERSION .
 COPY ./web .
 
 WORKDIR /web/default
+RUN npm config set registry https://registry.npmmirror.com
 RUN npm install
 RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat VERSION) npm run build
 
 WORKDIR /web/berry
+RUN npm config set registry https://registry.npmmirror.com
 RUN npm install
 RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat VERSION) npm run build
 
 WORKDIR /web/air
+RUN npm config set registry https://registry.npmmirror.com
 RUN npm install
 RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat VERSION) npm run build
 
 FROM golang:alpine AS builder2
 
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 RUN apk add --no-cache g++
 
 ENV GO111MODULE=on \
@@ -26,6 +30,7 @@ ENV GO111MODULE=on \
 
 WORKDIR /build
 ADD go.mod go.sum ./
+RUN go env -w GOPROXY=https://goproxy.cn,direct
 RUN go mod download
 COPY . .
 COPY --from=builder /web/build ./web/build

@@ -37,6 +37,7 @@ func relayHelper(c *gin.Context, relayMode int) *model.ErrorWithStatusCode {
 	case relaymode.Proxy:
 		err = controller.RelayProxyHelper(c, relayMode)
 	default:
+		fmt.Println("relayHelper c: ", c)
 		err = controller.RelayTextHelper(c)
 	}
 	return err
@@ -45,6 +46,8 @@ func relayHelper(c *gin.Context, relayMode int) *model.ErrorWithStatusCode {
 func Relay(c *gin.Context) {
 	ctx := c.Request.Context()
 	relayMode := relaymode.GetByPath(c.Request.URL.Path)
+	fmt.Println("Relay relayMode:", relayMode)
+	fmt.Println("Relay URL:", c.Request.URL)
 	if config.DebugEnabled {
 		requestBody, _ := common.GetRequestBody(c)
 		logger.Debugf(ctx, "request body: %s", string(requestBody))
@@ -135,7 +138,7 @@ func processChannelRelayError(ctx context.Context, userId int, channelId int, ch
 func RelayNotImplemented(c *gin.Context) {
 	err := model.Error{
 		Message: "API not implemented",
-		Type:    "one_api_error",
+		Type:    "api_error",
 		Param:   "",
 		Code:    "api_not_implemented",
 	}

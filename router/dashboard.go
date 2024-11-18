@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/songquanpeng/one-api/controller"
@@ -12,6 +13,7 @@ func SetDashboardRouter(router *gin.Engine) {
 	apiRouter.Use(middleware.CORS())
 	apiRouter.Use(gzip.Gzip(gzip.DefaultCompression))
 	apiRouter.Use(middleware.GlobalAPIRateLimit())
+	fmt.Println("run router dashboard.go")
 	apiRouter.Use(middleware.TokenAuth())
 	{
 		apiRouter.GET("/dashboard/billing/subscription", controller.GetSubscription)

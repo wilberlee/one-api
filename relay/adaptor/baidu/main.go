@@ -8,13 +8,13 @@ import (
 	"github.com/songquanpeng/one-api/common/render"
 	"io"
 	"net/http"
-	"strings"
+	// 	"strings"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/songquanpeng/one-api/common"
-	"github.com/songquanpeng/one-api/common/client"
+	// 	"github.com/songquanpeng/one-api/common/client"
 	"github.com/songquanpeng/one-api/common/logger"
 	"github.com/songquanpeng/one-api/relay/adaptor/openai"
 	"github.com/songquanpeng/one-api/relay/constant"
@@ -35,9 +35,9 @@ type Message struct {
 
 type ChatRequest struct {
 	Messages        []Message `json:"messages"`
-	Temperature     *float64  `json:"temperature,omitempty"`
-	TopP            *float64  `json:"top_p,omitempty"`
-	PenaltyScore    *float64  `json:"penalty_score,omitempty"`
+	Temperature     float64   `json:"temperature,omitempty"`
+	TopP            float64   `json:"top_p,omitempty"`
+	PenaltyScore    float64   `json:"penalty_score,omitempty"`
 	Stream          bool      `json:"stream,omitempty"`
 	System          string    `json:"system,omitempty"`
 	DisableSearch   bool      `json:"disable_search,omitempty"`
@@ -278,35 +278,15 @@ func GetAccessToken(apiKey string) (string, error) {
 }
 
 func getBaiduAccessTokenHelper(apiKey string) (*AccessToken, error) {
-	parts := strings.Split(apiKey, "|")
-	if len(parts) != 2 {
-		return nil, errors.New("invalid baidu apikey")
+	// 跳过 API Key 拆分和 HTTP 请求部分，直接使用已知的 access_token 值
+	accessToken := AccessToken{
+		AccessToken: "DC350C25B4ECAD66EEABE9F0E57D9AB7", // 已知的 access_token
+		ExpiresIn:   3600,                               // 假设 token 有效期为 3600 秒（你可以根据实际情况调整）
+		ExpiresAt:   time.Now().Add(3600 * time.Second), // 设置过期时间为当前时间 + 3600 秒
 	}
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=%s&client_secret=%s",
-		parts[0], parts[1]), nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/json")
-	res, err := client.ImpatientHTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
 
-	var accessToken AccessToken
-	err = json.NewDecoder(res.Body).Decode(&accessToken)
-	if err != nil {
-		return nil, err
-	}
-	if accessToken.Error != "" {
-		return nil, errors.New(accessToken.Error + ": " + accessToken.ErrorDescription)
-	}
-	if accessToken.AccessToken == "" {
-		return nil, errors.New("getBaiduAccessTokenHelper get empty access token")
-	}
-	accessToken.ExpiresAt = time.Now().Add(time.Duration(accessToken.ExpiresIn) * time.Second)
+	// 存储 token
 	baiduTokenStore.Store(apiKey, accessToken)
+	fmt.Println("Get Baidu Access Token accessToken is: ", accessToken)
 	return &accessToken, nil
 }

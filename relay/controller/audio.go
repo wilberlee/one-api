@@ -129,6 +129,7 @@ func RelayAudioHelper(c *gin.Context, relayMode int) *relaymodel.ErrorWithStatus
 	}
 
 	fullRequestURL := openai.GetFullRequestURL(baseURL, requestURL, channelType)
+	fmt.Println("RelayAudioHelper openai.GetFullRequestURL")
 	if channelType == channeltype.Azure {
 		apiVersion := meta.Config.APIVersion
 		if relayMode == relaymode.AudioTranscription {

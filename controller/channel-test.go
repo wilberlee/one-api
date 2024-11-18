@@ -43,6 +43,7 @@ func buildTestRequest(model string) *relaymodel.GeneralOpenAIRequest {
 		Content: "hi",
 	}
 	testRequest.Messages = append(testRequest.Messages, testMessage)
+	fmt.Println("testRequest is:", testRequest)
 	return testRequest
 }
 
@@ -65,6 +66,8 @@ func testChannel(channel *model.Channel, request *relaymodel.GeneralOpenAIReques
 	meta := meta.GetByContext(c)
 	apiType := channeltype.ToAPIType(channel.Type)
 	adaptor := relay.GetAdaptor(apiType)
+	fmt.Println("channel-testadaptor is:", adaptor)
+	fmt.Println("testChannel c.Request.Header is:", c.Request.Header)
 	if adaptor == nil {
 		return fmt.Errorf("invalid api type: %d, adaptor is nil", apiType), nil
 	}
@@ -76,13 +79,14 @@ func testChannel(channel *model.Channel, request *relaymodel.GeneralOpenAIReques
 		if len(modelNames) > 0 {
 			modelName = modelNames[0]
 		}
-	}
-	if modelMap != nil && modelMap[modelName] != "" {
-		modelName = modelMap[modelName]
+		if modelMap != nil && modelMap[modelName] != "" {
+			modelName = modelMap[modelName]
+		}
 	}
 	meta.OriginModelName, meta.ActualModelName = request.Model, modelName
 	request.Model = modelName
 	convertedRequest, err := adaptor.ConvertRequest(c, relaymode.ChatCompletions, request)
+	fmt.Println("!!!channel-test convertedRequest:", convertedRequest)
 	if err != nil {
 		return err, nil
 	}

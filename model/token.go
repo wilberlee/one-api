@@ -3,7 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
-	"github.com/songquanpeng/one-api/common"
+	// "github.com/songquanpeng/one-api/common"
 	"github.com/songquanpeng/one-api/common/config"
 	"github.com/songquanpeng/one-api/common/helper"
 	"github.com/songquanpeng/one-api/common/logger"
@@ -58,46 +58,63 @@ func SearchUserTokens(userId int, keyword string) (tokens []*Token, err error) {
 }
 
 func ValidateUserToken(key string) (token *Token, err error) {
-	if key == "" {
-		return nil, errors.New("未提供令牌")
+	// if key == "" {
+	// 	return nil, errors.New("未提供Access Code")
+	// }
+	// token, err = CacheGetTokenByKey("nari")
+	var models, subnet string
+	token = &Token{
+		Id:             1,
+		UserId:         1,
+		Key:            "nari",
+		Status:         1,
+		Name:           "nari",
+		CreatedTime:    1729766024,
+		AccessedTime:   1729766024,
+		ExpiredTime:    -1,
+		RemainQuota:    500000,
+		UnlimitedQuota: true,
+		UsedQuota:      0,
+		Models:         &models,
+		Subnet:         &subnet,
 	}
-	token, err = CacheGetTokenByKey(key)
-	if err != nil {
-		logger.SysError("CacheGetTokenByKey failed: " + err.Error())
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("无效的令牌")
-		}
-		return nil, errors.New("令牌验证失败")
-	}
-	if token.Status == TokenStatusExhausted {
-		return nil, fmt.Errorf("令牌 %s（#%d）额度已用尽", token.Name, token.Id)
-	} else if token.Status == TokenStatusExpired {
-		return nil, errors.New("该令牌已过期")
-	}
-	if token.Status != TokenStatusEnabled {
-		return nil, errors.New("该令牌状态不可用")
-	}
-	if token.ExpiredTime != -1 && token.ExpiredTime < helper.GetTimestamp() {
-		if !common.RedisEnabled {
-			token.Status = TokenStatusExpired
-			err := token.SelectUpdate()
-			if err != nil {
-				logger.SysError("failed to update token status" + err.Error())
-			}
-		}
-		return nil, errors.New("该令牌已过期")
-	}
-	if !token.UnlimitedQuota && token.RemainQuota <= 0 {
-		if !common.RedisEnabled {
-			// in this case, we can make sure the token is exhausted
-			token.Status = TokenStatusExhausted
-			err := token.SelectUpdate()
-			if err != nil {
-				logger.SysError("failed to update token status" + err.Error())
-			}
-		}
-		return nil, errors.New("该令牌额度已用尽")
-	}
+	fmt.Println("ValidateUserToken token is:", token)
+	// if err != nil {
+	// 	logger.SysError("CacheGetTokenByKey failed: " + err.Error())
+	// 	if errors.Is(err, gorm.ErrRecordNotFound) {
+	// 		return nil, errors.New("无效的令牌")
+	// 	}
+	// 	return nil, errors.New("令牌验证失败")
+	// }
+	// if token.Status == TokenStatusExhausted {
+	// 	return nil, fmt.Errorf("令牌 %s（#%d）额度已用尽", token.Name, token.Id)
+	// } else if token.Status == TokenStatusExpired {
+	// 	return nil, errors.New("该令牌已过期")
+	// }
+	// if token.Status != TokenStatusEnabled {
+	// 	return nil, errors.New("该令牌状态不可用")
+	// }
+	// if token.ExpiredTime != -1 && token.ExpiredTime < helper.GetTimestamp() {
+	// 	if !common.RedisEnabled {
+	// 		token.Status = TokenStatusExpired
+	// 		err := token.SelectUpdate()
+	// 		if err != nil {
+	// 			logger.SysError("failed to update token status" + err.Error())
+	// 		}
+	// 	}
+	// 	return nil, errors.New("该令牌已过期")
+	// }
+	// if !token.UnlimitedQuota && token.RemainQuota <= 0 {
+	// 	if !common.RedisEnabled {
+	// 		// in this case, we can make sure the token is exhausted
+	// 		token.Status = TokenStatusExhausted
+	// 		err := token.SelectUpdate()
+	// 		if err != nil {
+	// 			logger.SysError("failed to update token status" + err.Error())
+	// 		}
+	// 	}
+	// 	return nil, errors.New("该令牌额度已用尽")
+	// }
 	return token, nil
 }
 

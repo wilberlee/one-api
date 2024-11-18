@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/songquanpeng/one-api/relay/adaptor"
+	"github.com/songquanpeng/one-api/relay/adaptor/openai"
 	"github.com/songquanpeng/one-api/relay/meta"
 	"github.com/songquanpeng/one-api/relay/model"
 	"github.com/songquanpeng/one-api/relay/relaymode"
 	"io"
 	"net/http"
+	"strings"
 )
 
 // https://help.aliyun.com/zh/dashscope/developer-reference/api-details
@@ -30,6 +32,9 @@ func (a *Adaptor) GetRequestURL(meta *meta.Meta) (string, error) {
 	case relaymode.ImagesGenerations:
 		fullRequestURL = fmt.Sprintf("%s/api/v1/services/aigc/text2image/image-synthesis", meta.BaseURL)
 	default:
+		if strings.Contains(meta.BaseURL, "/compatible-mode/v1/") {
+			return openai.GetFullRequestURL(meta.BaseURL, meta.RequestURLPath, meta.ChannelType), nil
+		}
 		fullRequestURL = fmt.Sprintf("%s/api/v1/services/aigc/text-generation/generation", meta.BaseURL)
 	}
 

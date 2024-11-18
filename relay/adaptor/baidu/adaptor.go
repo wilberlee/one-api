@@ -3,15 +3,15 @@ package baidu
 import (
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/songquanpeng/one-api/relay/adaptor"
+	"github.com/songquanpeng/one-api/relay/adaptor/openai"
 	"github.com/songquanpeng/one-api/relay/meta"
+	"github.com/songquanpeng/one-api/relay/model"
 	"github.com/songquanpeng/one-api/relay/relaymode"
 	"io"
 	"net/http"
 	"strings"
-
-	"github.com/gin-gonic/gin"
-	"github.com/songquanpeng/one-api/relay/adaptor"
-	"github.com/songquanpeng/one-api/relay/model"
 )
 
 type Adaptor struct {
@@ -23,6 +23,10 @@ func (a *Adaptor) Init(meta *meta.Meta) {
 
 func (a *Adaptor) GetRequestURL(meta *meta.Meta) (string, error) {
 	// https://cloud.baidu.com/doc/WENXINWORKSHOP/s/clntwmv7t
+	if strings.Contains(meta.BaseURL, "/ai_custom/v1/wenxinworkshop/") {
+		return openai.GetFullRequestURL(meta.BaseURL, meta.RequestURLPath, meta.ChannelType), nil
+	}
+	baseURL := "http://172.40.233.2:8687"
 	suffix := "chat/"
 	if strings.HasPrefix(meta.ActualModelName, "Embedding") {
 		suffix = "embeddings/"
@@ -34,12 +38,18 @@ func (a *Adaptor) GetRequestURL(meta *meta.Meta) (string, error) {
 		suffix = "embeddings/"
 	}
 	switch meta.ActualModelName {
+	case "Qianfan-70b":
+		suffix += "qianfan-70b"
+	case "LLama2-7b":
+		suffix += "llama-2-7b"
+	case "ChatGLM3-6b":
+		suffix += "chatglm3-6b"
 	case "ERNIE-4.0":
-		suffix += "completions_pro"
+		suffix += "llama-2-7b"
 	case "ERNIE-Bot-4":
-		suffix += "completions_pro"
+		suffix += "qianfan-70b"
 	case "ERNIE-Bot":
-		suffix += "completions"
+		suffix += "chatglm3-6b"
 	case "ERNIE-Bot-turbo":
 		suffix += "eb-instant"
 	case "ERNIE-Speed":
@@ -64,34 +74,23 @@ func (a *Adaptor) GetRequestURL(meta *meta.Meta) (string, error) {
 		suffix += "eb-instant"
 	case "ERNIE-Lite-8K-0308":
 		suffix += "ernie-lite-8k"
-	case "ERNIE-Tiny-8K":
-		suffix += "ernie-tiny-8k"
-	case "BLOOMZ-7B":
-		suffix += "bloomz_7b1"
-	case "Embedding-V1":
-		suffix += "embedding-v1"
-	case "bge-large-zh":
-		suffix += "bge_large_zh"
-	case "bge-large-en":
-		suffix += "bge_large_en"
-	case "tao-8k":
-		suffix += "tao_8k"
 	default:
 		suffix += strings.ToLower(meta.ActualModelName)
 	}
-	fullRequestURL := fmt.Sprintf("%s/rpc/2.0/ai_custom/v1/wenxinworkshop/%s", meta.BaseURL, suffix)
+	fullRequestURL := fmt.Sprintf("%s/rpc/2.0/ai_custom/v1/wenxinworkshop/%s", baseURL, suffix)
+
 	var accessToken string
 	var err error
 	if accessToken, err = GetAccessToken(meta.APIKey); err != nil {
 		return "", err
 	}
-	fullRequestURL += "?access_token=" + accessToken
+	fullRequestURL += "?AccessCode=" + accessToken
+	fmt.Println("url is:", fullRequestURL)
 	return fullRequestURL, nil
 }
 
 func (a *Adaptor) SetupRequestHeader(c *gin.Context, req *http.Request, meta *meta.Meta) error {
 	adaptor.SetupCommonRequestHeader(c, req, meta)
-	req.Header.Set("Authorization", "Bearer "+meta.APIKey)
 	return nil
 }
 
@@ -99,6 +98,7 @@ func (a *Adaptor) ConvertRequest(c *gin.Context, relayMode int, request *model.G
 	if request == nil {
 		return nil, errors.New("request is nil")
 	}
+	fmt.Println("******** baidu convertRequest *******")
 	switch relayMode {
 	case relaymode.Embeddings:
 		baiduEmbeddingRequest := ConvertEmbeddingRequest(*request)

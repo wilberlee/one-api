@@ -3,11 +3,12 @@ package adaptor
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/songquanpeng/one-api/common/client"
 	"github.com/songquanpeng/one-api/relay/meta"
-	"io"
-	"net/http"
 )
 
 func SetupCommonRequestHeader(c *gin.Context, req *http.Request, meta *meta.Meta) {
@@ -24,6 +25,10 @@ func DoRequestHelper(a Adaptor, c *gin.Context, meta *meta.Meta, requestBody io.
 		return nil, fmt.Errorf("get request url failed: %w", err)
 	}
 	req, err := http.NewRequest(c.Request.Method, fullRequestURL, requestBody)
+	fmt.Println("DoRequestHelper c.Request.Method:", c.Request.Method)
+	fmt.Println("DoRequestHelper fullRequestURL:", fullRequestURL)
+	fmt.Println("DoRequestHelper requestBody:", requestBody)
+	fmt.Println("DoRequestHelper req:", req)
 	if err != nil {
 		return nil, fmt.Errorf("new request failed: %w", err)
 	}
@@ -31,10 +36,13 @@ func DoRequestHelper(a Adaptor, c *gin.Context, meta *meta.Meta, requestBody io.
 	if err != nil {
 		return nil, fmt.Errorf("setup request header failed: %w", err)
 	}
+	fmt.Println("DoRequestHelper here--------")
+	fmt.Println("DoRequestHelper c--------", c)
 	resp, err := DoRequest(c, req)
 	if err != nil {
 		return nil, fmt.Errorf("do request failed: %w", err)
 	}
+	fmt.Println("DoRequestHelper resp:", resp)
 	return resp, nil
 }
 

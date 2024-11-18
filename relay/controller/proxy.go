@@ -17,13 +17,15 @@ import (
 func RelayProxyHelper(c *gin.Context, relayMode int) *relaymodel.ErrorWithStatusCode {
 	ctx := c.Request.Context()
 	meta := meta.GetByContext(c)
-
+	fmt.Println("RelayProxyHelper c:", c)
+	fmt.Println("RelayProxyHelper meta:", meta)
 	adaptor := relay.GetAdaptor(meta.APIType)
+	fmt.Println("RelayProxyHelper adaptor:", adaptor)
 	if adaptor == nil {
 		return openai.ErrorWrapper(fmt.Errorf("invalid api type: %d", meta.APIType), "invalid_api_type", http.StatusBadRequest)
 	}
 	adaptor.Init(meta)
-
+	fmt.Println("RelayProxyHelper final adaptor:", adaptor)
 	resp, err := adaptor.DoRequest(c, meta, c.Request.Body)
 	if err != nil {
 		logger.Errorf(ctx, "DoRequest failed: %s", err.Error())

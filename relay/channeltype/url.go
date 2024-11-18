@@ -16,7 +16,7 @@ var ChannelBaseURLs = []string{
 	"https://api.api2gpt.com",                   // 12
 	"https://api.aigc2d.com",                    // 13
 	"https://api.anthropic.com",                 // 14
-	"https://aip.baidubce.com",                  // 15
+	"http://172.40.233.2:8687",                  // 15 "https://aip.baidubce.com"
 	"https://open.bigmodel.cn",                  // 16
 	"https://dashscope.aliyuncs.com",            // 17
 	"",                                          // 18
@@ -46,7 +46,6 @@ var ChannelBaseURLs = []string{
 	"",                                          // 42
 	"",                                          // 43
 	"https://api.siliconflow.cn",                // 44
-	"https://api.x.ai",                          // 45
 }
 
 func init() {

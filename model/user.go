@@ -338,6 +338,7 @@ func ValidateAccessToken(token string) (user *User) {
 	token = strings.Replace(token, "Bearer ", "", 1)
 	user = &User{}
 	if DB.Where("access_token = ?", token).First(user).RowsAffected == 1 {
+		fmt.Println("model.ValidateAccessToken: user:", user)
 		return user
 	}
 	return nil

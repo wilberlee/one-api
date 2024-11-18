@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/songquanpeng/one-api/common/config"
 	"github.com/songquanpeng/one-api/common/helper"
@@ -11,6 +12,7 @@ import (
 )
 
 func GetAllChannels(c *gin.Context) {
+	fmt.Println("GetAllChannels")
 	p, _ := strconv.Atoi(c.Query("p"))
 	if p < 0 {
 		p = 0
@@ -32,6 +34,7 @@ func GetAllChannels(c *gin.Context) {
 }
 
 func SearchChannels(c *gin.Context) {
+	fmt.Println("SearchChannels")
 	keyword := c.Query("keyword")
 	channels, err := model.SearchChannels(keyword)
 	if err != nil {
@@ -50,6 +53,7 @@ func SearchChannels(c *gin.Context) {
 }
 
 func GetChannel(c *gin.Context) {
+	fmt.Println("GetChannel")
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -75,6 +79,7 @@ func GetChannel(c *gin.Context) {
 }
 
 func AddChannel(c *gin.Context) {
+	fmt.Println("AddChannel")
 	channel := model.Channel{}
 	err := c.ShouldBindJSON(&channel)
 	if err != nil {

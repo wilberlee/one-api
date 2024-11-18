@@ -4,16 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/songquanpeng/one-api/common/client"
 	"github.com/songquanpeng/one-api/common/config"
 	"github.com/songquanpeng/one-api/common/logger"
 	"github.com/songquanpeng/one-api/model"
 	"github.com/songquanpeng/one-api/monitor"
 	"github.com/songquanpeng/one-api/relay/channeltype"
-	"io"
-	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -174,6 +175,7 @@ func updateChannelOpenAISBBalance(channel *model.Channel) (float64, error) {
 
 func updateChannelAIProxyBalance(channel *model.Channel) (float64, error) {
 	url := "https://aiproxy.io/api/report/getUserOverview"
+	fmt.Println("updateChannelAIProxyBalance url:", url)
 	headers := http.Header{}
 	headers.Add("Api-Key", channel.Key)
 	body, err := GetResponseBody("GET", url, channel, headers)
@@ -259,6 +261,7 @@ func updateChannelBalance(channel *model.Channel) (float64, error) {
 		return 0, errors.New("尚未实现")
 	case channeltype.Custom:
 		baseURL = channel.GetBaseURL()
+		fmt.Println("updateChannelBalance custom baseURL:", baseURL)
 	case channeltype.CloseAI:
 		return updateChannelCloseAIBalance(channel)
 	case channeltype.OpenAISB:

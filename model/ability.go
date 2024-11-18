@@ -2,10 +2,12 @@ package model
 
 import (
 	"context"
-	"github.com/songquanpeng/one-api/common"
-	"gorm.io/gorm"
+	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/songquanpeng/one-api/common"
+	"gorm.io/gorm"
 )
 
 type Ability struct {
@@ -17,6 +19,7 @@ type Ability struct {
 }
 
 func GetRandomSatisfiedChannel(group string, model string, ignoreFirstPriority bool) (*Channel, error) {
+	fmt.Println("CacheGetRandomSatisfiedChannel model:", model)
 	ability := Ability{}
 	groupCol := "`group`"
 	trueVal := "1"
@@ -43,6 +46,7 @@ func GetRandomSatisfiedChannel(group string, model string, ignoreFirstPriority b
 	}
 	channel := Channel{}
 	channel.Id = ability.ChannelId
+	fmt.Println("CacheGetRandomSatisfiedChannel channel.Id:", channel.Id)
 	err = DB.First(&channel, "id = ?", ability.ChannelId).Error
 	return &channel, err
 }

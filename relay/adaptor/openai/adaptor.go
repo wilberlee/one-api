@@ -53,6 +53,7 @@ func (a *Adaptor) GetRequestURL(meta *meta.Meta) (string, error) {
 	case channeltype.Novita:
 		return novita.GetRequestURL(meta)
 	default:
+		fmt.Println("adaptor GetRequestURL getfullrequesturl is here.")
 		return GetFullRequestURL(meta.BaseURL, meta.RequestURLPath, meta.ChannelType), nil
 	}
 }
@@ -74,13 +75,6 @@ func (a *Adaptor) SetupRequestHeader(c *gin.Context, req *http.Request, meta *me
 func (a *Adaptor) ConvertRequest(c *gin.Context, relayMode int, request *model.GeneralOpenAIRequest) (any, error) {
 	if request == nil {
 		return nil, errors.New("request is nil")
-	}
-	if request.Stream {
-		// always return usage in stream mode
-		if request.StreamOptions == nil {
-			request.StreamOptions = &model.StreamOptions{}
-		}
-		request.StreamOptions.IncludeUsage = true
 	}
 	return request, nil
 }

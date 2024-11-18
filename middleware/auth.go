@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/songquanpeng/one-api/common/blacklist"
 	"github.com/songquanpeng/one-api/common/ctxkey"
-	"github.com/songquanpeng/one-api/common/network"
+	// "github.com/songquanpeng/one-api/common/network"
 	"github.com/songquanpeng/one-api/model"
 	"net/http"
 	"strings"
@@ -21,6 +21,7 @@ func authHelper(c *gin.Context, minRole int) {
 	if username == nil {
 		// Check access token
 		accessToken := c.Request.Header.Get("Authorization")
+		fmt.Println("middleware.authHelper: access token:", accessToken)
 		if accessToken == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"success": false,
@@ -90,23 +91,24 @@ func RootAuth() func(c *gin.Context) {
 
 func TokenAuth() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		ctx := c.Request.Context()
+		// ctx := c.Request.Context()
 		key := c.Request.Header.Get("Authorization")
 		key = strings.TrimPrefix(key, "Bearer ")
 		key = strings.TrimPrefix(key, "sk-")
 		parts := strings.Split(key, "-")
 		key = parts[0]
+		fmt.Println("TokenAuth--key value", key)
 		token, err := model.ValidateUserToken(key)
 		if err != nil {
 			abortWithMessage(c, http.StatusUnauthorized, err.Error())
 			return
 		}
-		if token.Subnet != nil && *token.Subnet != "" {
-			if !network.IsIpInSubnets(ctx, c.ClientIP(), *token.Subnet) {
-				abortWithMessage(c, http.StatusForbidden, fmt.Sprintf("该令牌只能在指定网段使用：%s，当前 ip：%s", *token.Subnet, c.ClientIP()))
-				return
-			}
-		}
+		// if token.Subnet != nil && *token.Subnet != "" {
+		// 	if !network.IsIpInSubnets(ctx, c.ClientIP(), *token.Subnet) {
+		// 		abortWithMessage(c, http.StatusForbidden, fmt.Sprintf("该令牌只能在指定网段使用：%s，当前 ip：%s", *token.Subnet, c.ClientIP()))
+		// 		return
+		// 	}
+		// }
 		userEnabled, err := model.CacheIsUserEnabled(token.UserId)
 		if err != nil {
 			abortWithMessage(c, http.StatusInternalServerError, err.Error())
@@ -132,14 +134,14 @@ func TokenAuth() func(c *gin.Context) {
 		c.Set(ctxkey.Id, token.UserId)
 		c.Set(ctxkey.TokenId, token.Id)
 		c.Set(ctxkey.TokenName, token.Name)
-		if len(parts) > 1 {
-			if model.IsAdmin(token.UserId) {
-				c.Set(ctxkey.SpecificChannelId, parts[1])
-			} else {
-				abortWithMessage(c, http.StatusForbidden, "普通用户不支持指定渠道")
-				return
-			}
-		}
+		// if len(parts) > 1 {
+		// 	if model.IsAdmin(token.UserId) {
+		// 		c.Set(ctxkey.SpecificChannelId, parts[1])
+		// 	} else {
+		// 		abortWithMessage(c, http.StatusForbidden, "普通用户不支持指定渠道")
+		// 		return
+		// 	}
+		// }
 
 		// set channel id for proxy relay
 		if channelId := c.Param("channelid"); channelId != "" {

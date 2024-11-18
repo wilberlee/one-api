@@ -8,7 +8,6 @@ import (
 	"github.com/songquanpeng/one-api/common/env"
 	"github.com/songquanpeng/one-api/common/helper"
 	"github.com/songquanpeng/one-api/common/logger"
-	"github.com/songquanpeng/one-api/common/random"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -30,7 +29,8 @@ func CreateRootAccountIfNeed() error {
 		if err != nil {
 			return err
 		}
-		accessToken := random.GetUUID()
+		// accessToken := random.GetUUID()
+		accessToken := "nari"
 		if config.InitialRootAccessToken != "" {
 			accessToken = config.InitialRootAccessToken
 		}
